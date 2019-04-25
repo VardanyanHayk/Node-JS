@@ -1,6 +1,31 @@
 let db =require('../db');
 const fs=require('fs');
+const io=require('../index');
 const ObjectId=require('mongodb').ObjectId;
+
+exports.addNews=(id,text,cb)=>{
+  let date=new Date()
+  let data={_id:ObjectId(id),text:[{text:text,time:` ${date.getDate()}/${date.getMonth()}/${date.getFullYear()}  ${date.getHours()}:${date.getMinutes()}`}]}
+  db.get().collection('news').findOne({_id:ObjectId(id)},(err,result)=>{
+    if(result!=null){ console.log(result);let oldlist=result.text;
+
+      oldlist.unshift({text:text,time:` ${date.getDate()}/${date.getMonth()}/${date.getFullYear()}  ${date.getHours()}:${date.getMinutes()}`});
+      db.get().collection('news').updateOne({_id:ObjectId(id)},{$set:{text:oldlist}},(err,result)=>{
+        db.get().collection('news').findOne({_id:ObjectId(id)},(err,result)=>{cb(err,result)})
+      })
+
+    }
+    else {
+      db.get().collection('news').insert(data,(err,result)=>{
+        db.get().collection('news').findOne({_id:ObjectId(id)},(err,result)=>{cb(err,result)})
+      })
+    }
+
+  })
+}
+exports.addBankData=(id,data,cb)=>{
+  db.get().collection('banks').updateOne({_id:ObjectId(id)},{$set:{bankdata:data}},(err,data)=>{cb(err,data);})
+}
 exports.changePasswordById=(id,pass,cb)=>{
   db.get().collection('usersdata').findOne({_id:ObjectId(id)},(err,result)=>{
     if(result===null){
@@ -21,17 +46,19 @@ exports.changeNameById=(id,name,cb)=>{
     db.get().collection('usersdata').findOne({_id:ObjectId(id)},(err,result)=>{
       if(result===null){
         db.get().collection('superuser').findOne({_id:ObjectId(id)},(err,data)=>{
-        db.get().collection('superuser').updateOne({_id:ObjectId(id)},{$set:{firstname:name.firstname,lastname:name.lastname}},(err,result)=>{cb(err,{call:'Ok'})})
+        db.get().collection('superuser').updateOne({_id:ObjectId(id)},{$set:{firstname:name.firstname,lastname:name.lastname}},(err,result)=>{cb(err,{call:'Ok',firstname:name.firstname,lastname:name.lastname})})
             })
 
       }
       else {
-        db.get().collection('usersdata').updateOne({_id:ObjectId(id)},{$set:{firstname:name.firstname,lastname:name.lastname}},(err,result)=>{cb(err,{call:'Ok'})})
+        db.get().collection('usersdata').updateOne({_id:ObjectId(id)},{$set:{firstname:name.firstname,lastname:name.lastname}},(err,result)=>{cb(err,{call:'Ok',firstname:name.firstname,lastname:name.lastname})})
       }
     })
   }
   exports.changeDeleteById=(id1,cb)=>{
+    let userId;
     db.get().collection('superuser').findOne({username:'superuserhayk'},(err,result1)=>{
+      userId=result1._id;
       db.get().collection('messages').findOne({_id:ObjectId(result1._id)},(err,result)=>{
       let message=result.messages;
       let newmessage=[];
@@ -48,7 +75,7 @@ exports.changeNameById=(id,name,cb)=>{
       this.deleteBankImage(id1,(err)=>{})
 
     db.get().collection('banks').remove({_id:ObjectId(id1)},(err,result)=>{})
-    db.get().collection('messages').remove({_id:ObjectId(id1)},(err,result)=>{cb(err,{call:'Ok'})})
+    db.get().collection('messages').remove({_id:ObjectId(id1)},(err,result)=>{if(io.socketOn){io.socketUsers(userId)} cb(err,{call:'Ok'})})
 
   }
 exports.deleteBankImage=(id,cb)=>{
@@ -77,6 +104,10 @@ exports.deleteUserImage=(id,cb)=>{
         }
       })
 }
+exports.setBankData=(id,data,cb)=>{
+    db.get().collection('banks').updateOne({_id:ObjectId(id)},{$set:{bankData:data}},(err,result)=>{cb(err)})
+}
+
 exports.addBankImage=(id,image,cb)=>{
   db.get().collection('banks').updateOne({_id:ObjectId(id)},{$set:{image:image}},(err,result)=>{cb(err)})
 }

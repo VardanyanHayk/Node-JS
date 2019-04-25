@@ -1,5 +1,5 @@
 let db =require('../db');
-
+let io=require('../index');
 exports.registrat=(data,data1,data2,cb)=>{
 
   db.get().collection('usersdata').insert(data,(err,result)=>{
@@ -12,7 +12,7 @@ exports.registrat=(data,data1,data2,cb)=>{
   db.get().collection('messages').findOne({_id:result._id},(err,data)=>{
   let mess=data.messages;
   mess.push(alldata);
-db.get().collection('messages').updateOne({_id:result._id},{$set:{messages:mess}},(err,result)=>{cb(err,result);})
+db.get().collection('messages').updateOne({_id:result._id},{$set:{messages:mess}},(err,data)=>{if(io.socketOn){io.socketUsers(result._id);} cb(err,data);})
   })
   })
   })

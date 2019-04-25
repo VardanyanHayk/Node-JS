@@ -1,9 +1,16 @@
-let db =require('../db');
+const db =require('../db');
+const io=require('../index');
 const ObjectId=require('mongodb').ObjectId;
 
 exports.getMessageById=(id,cb)=>{
   db.get().collection('messages').findOne({_id:ObjectId(id)},(err,data)=>{  cb(err,data)})
 
+}
+
+exports.getUsers=(id,cb)=>{
+  db.get().collection('usersdata').find().toArray(function(err, docs) {
+        cb(err,docs)
+  });
 }
 exports.getUserMessageById=(id,cb)=>{
   db.get().collection('messages').findOne({_id:ObjectId(id)},(err,data)=>{  cb(err,data.messages)})
@@ -14,7 +21,8 @@ exports.writeMessageById=(id,data1,key,cb)=>{
     let mess=data.messages;
     let dat={key:key,message:data1};
     mess.push(dat);
-    db.get().collection('messages').updateOne({_id:ObjectId(id)},{$set:{messages:mess}},(err,result)=>{cb(err,result)})
+
+    db.get().collection('messages').updateOne({_id:ObjectId(id)},{$set:{messages:mess}},(err,result)=>{io.socket(id);cb(err,result)})
       })
 
 }
@@ -32,11 +40,10 @@ exports.userData=(id,cb)=>{
 exports.confirmById=(id1,id2,cb)=>{
   db.get().collection('messages').findOne({_id:ObjectId(id1)},(err,result)=>{
     let message=result.messages;
-    console.log(message);
     message.map((item)=>{
       if(item._id==id2) {item['confirm']=true;return}
     })
-  db.get().collection('messages').updateOne({_id:ObjectId(id1)},{$set:{messages:message}},(err,result)=>{cb(err,result)})
+  db.get().collection('messages').updateOne({_id:ObjectId(id1)},{$set:{messages:message}},(err,result)=>{if(io.socketOn){io.socketUsers(id1)};cb(err,result)})
   })
 }
 exports.deleteUser=(id1,id2,cb)=>{
@@ -50,6 +57,6 @@ exports.deleteUser=(id1,id2,cb)=>{
 })
   db.get().collection('usersdata').remove({_id:ObjectId(id2)},(err,result)=>{})
   db.get().collection('banks').remove({_id:ObjectId(id2)},(err,result)=>{})
-  db.get().collection('messages').remove({_id:ObjectId(id2)},(err,result)=>{cb(err,result)})
+  db.get().collection('messages').remove({_id:ObjectId(id2)},(err,result)=>{io.socketUsers(id1);cb(err,result)})
 
 }

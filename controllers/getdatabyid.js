@@ -1,10 +1,21 @@
 let getdata=require('../models/getdatabyid');
+
 exports.getMess=(id,cb)=>{
   getdata.getMessageById(id,(err,result)=>{
           cb(result)
   })
 }
-
+exports.allUsersData=(id,cb)=>{
+  getdata.getUsers(id,(err,result)=>{cb(result)})
+}
+exports.allUsers=(req,res)=>{
+  getdata.getUsers(req.body.id,(err,result)=>{
+    if(err){
+      console.log('eerrror');
+    }
+    res.json(result)
+  })
+}
 exports.getMessageById=(req,res)=>{
   let id=req.body.id;
 getdata.getMessageById(id,(err,result)=>{
