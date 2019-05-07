@@ -7,7 +7,7 @@ const db=require('./db');
 const http = require('http');
 const socketIO = require('socket.io');
 const server = http.createServer(app);
-const xlsx = require('xlsx');
+
 //controllers import
 
 let registration=require('./controllers/registration');
@@ -22,15 +22,6 @@ app.set('view engine','ejs');
 app.use(express.static('public'));
 app.use(cors());
 const port = 4001;
-
-
-//excel react
-var workbook = xlsx.readFile(__dirname+'/file/1.xlsx');
-var sheet_name_list = workbook.SheetNames;
-var xlData = xlsx.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]);
-
-
-
 //socket
 const io = socketIO(server);
 io.on('connection', socket => {

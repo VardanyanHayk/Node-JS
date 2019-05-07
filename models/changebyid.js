@@ -24,7 +24,9 @@ exports.addNews=(id,text,cb)=>{
   })
 }
 exports.addBankData=(id,data,cb)=>{
-  db.get().collection('banks').updateOne({_id:ObjectId(id)},{$set:{bankdata:data}},(err,data)=>{cb(err,data);})
+  db.get().collection('banks').updateOne({_id:ObjectId(id)},{$set:{bankdata:data}},(err,data)=>{
+      db.get().collection('banks').findOne({_id:ObjectId(id)},(err,result)=>{cb(err,result);})
+  })
 }
 exports.changePasswordById=(id,pass,cb)=>{
   db.get().collection('usersdata').findOne({_id:ObjectId(id)},(err,result)=>{
@@ -75,7 +77,7 @@ exports.changeNameById=(id,name,cb)=>{
       this.deleteBankImage(id1,(err)=>{})
 
     db.get().collection('banks').remove({_id:ObjectId(id1)},(err,result)=>{})
-    db.get().collection('messages').remove({_id:ObjectId(id1)},(err,result)=>{if(io.socketOn){io.socketUsers(userId)} cb(err,{call:'Ok'})})
+    db.get().collection('messages').remove({_id:ObjectId(id1)},(err,result)=>{cb(err,{call:'Ok'})})
 
   }
 exports.deleteBankImage=(id,cb)=>{
